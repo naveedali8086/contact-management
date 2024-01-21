@@ -9,7 +9,7 @@ class InstallCommand extends Command
 {
     protected $signature = 'contact-crud:install';
 
-    protected $description = 'Install the CRUD functionality for contact management';
+    protected $description = 'Install the CRUD functionality for contacts management';
 
     public function handle()
     {

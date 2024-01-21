@@ -41,17 +41,12 @@ class ContactRequest extends FormRequest
                 },
                     Contact::channelValueAdditionalRules($this->input('channel')),
                     // default rules, that will always apply on "channel_value" attribute
-                    // TODO: check if default rules would always be appended or needs to set explicitly
                     ['required', 'max:255'])
             ],
 
             'belongs_to' => ['required', Rule::enum(ContactBelongsTo::class)],
 
             'belongs_to_id' => ['required']
-
-            // TODO: also make sure that channel is email, value is a proper email and if phone number/whatsApp
-            // it is a valid phone no.
-            // TODO: need to think about whatsapp_enabled?
         ];
     }
 
@@ -59,8 +54,6 @@ class ContactRequest extends FormRequest
     {
         return [
             function (Validator $validator) {
-                // TODO: check if after hook only executes after all validations are passed
-                // if no, then add one check below that will check if "channel_value" is empty or not
                 Contact::addErrorIfContactExists($validator, 'channel_value');
             }
         ];

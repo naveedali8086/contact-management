@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Enums\ContactBelongsTo;
 use App\Enums\ContactChannels;
 use App\Models\Contact;
 use Illuminate\Database\Eloquent\Factories\Factory;
