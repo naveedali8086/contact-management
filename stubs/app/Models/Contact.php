@@ -33,19 +33,21 @@ class Contact extends Model
     public static function addErrorIfContactExists(Validator $validator, $attribute, $id = null): void
     {
         $attrValue = $validator->getValue($attribute);
-        $exists = self::query()
-            ->where('channel_value', $attrValue)
-            ->where('contactable_type', \App\Models\Customer::class)
-            ->when($id, function (Builder $query, $id) {
-                $query->whereNot('id', $id);
-            })
-            ->exists();
+        if ($attrValue) {
+            $exists = self::query()
+                ->where('channel_value', $attrValue)
+                ->where('contactable_type', \App\Models\Customer::class)
+                ->when($id, function (Builder $query, $id) {
+                    $query->whereNot('id', $id);
+                })
+                ->exists();
 
-        if ($exists) {
-            $validator->errors()->add(
-                $attribute,
-                "'$attrValue' has already been taken"
-            );
+            if ($exists) {
+                $validator->errors()->add(
+                    $attribute,
+                    "'$attrValue' has already been taken"
+                );
+            }
         }
     }
 
@@ -53,10 +55,10 @@ class Contact extends Model
     {
         $rules = [];
         switch ($channel) {
-            case ContactChannels::EMAIL:
+            case ContactChannels::EMAIL->value:
                 $rules[] = 'email';
                 break;
-            case ContactChannels::MOBILE:
+            case ContactChannels::MOBILE->value:
                 $rules[] = new MobileNumberRule;
                 break;
         }
