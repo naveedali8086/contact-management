@@ -1,0 +1,37 @@
+{
+    "name": "naveedali8086/contact-management",
+    "description": "Minimal contact management/CRUD scaffolding",
+    "keywords": ["laravel", "contact crud", "crud", "contact management"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Naveed Ali",
+            "email": "naveedali8086@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1.0",
+        "illuminate/console": "^10.39",
+        "illuminate/support": "^10.39",
+        "illuminate/filesystem": "^10.41",
+        "naveedali8086/laravel-helpers": "@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "Naveedali8086\\ContactManagement\\": "src/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "D:\\laragon\\www\\naveedali8086\\laravel-helpers"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Naveedali8086\\ContactManagement\\ContactManagementServiceProvider"
+            ]
+        }
+    }
+}
