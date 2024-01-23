@@ -19,6 +19,8 @@ class ContactResource extends JsonResource
             'channel' => $this->channel,
             'channel_other' => $this->channel_other,
             'channel_value' => $this->channel_value,
+            'belongs_to' => $this->belongs_to,
+            'belongs_to_id' => $this->contactable_id,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

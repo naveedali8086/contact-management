@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ContactBelongsTo;
 use App\Http\Requests\StoreContactRequest;
 use App\Http\Requests\UpdateContactRequest;
 use App\Http\Resources\ContactCollection;
@@ -27,15 +28,16 @@ class ContactController extends Controller
      */
     public function store(StoreContactRequest $request)
     {
-        // i.e. It could be: App\Models\Customer, App\Models\User, ...
-        $parentModelClass = $request->input('belongs_to');
-
-        $parentModel = $parentModelClass::findOrFail(
-            $request->input('belongs_to_id')
+        // Getting contact's parent model fully qualified class name
+        $parentModelClass = ContactBelongsTo::getContactParentModelClass(
+            $request->enum('belongs_to', ContactBelongsTo::class)
         );
 
+        // getting contact's parent model
+        $parentModel = $parentModelClass::findOrFail($request->input('belongs_to_id'));
+
         $contact = $parentModel->contacts()->create(
-            Arr::except($request->validated(), ['belongs_to', 'belongs_to_id'])
+            Arr::except($request->validated(), ['belongs_to_id'])
         );
 
         if ($contact) {
@@ -60,7 +62,17 @@ class ContactController extends Controller
      */
     public function update(UpdateContactRequest $request, Contact $contact)
     {
-        $updated = $contact->update($request->validated());
+        // Getting contact's parent model fully qualified class name
+        $parentModelClass = ContactBelongsTo::getContactParentModelClass(
+            $request->enum('belongs_to', ContactBelongsTo::class)
+        );
+
+        // getting contact's parent model
+        $parentModel = $parentModelClass::findOrFail($request->input('belongs_to_id'));
+
+        $updated = $parentModel->contacts()->update(
+            Arr::except($request->validated(), ['belongs_to_id'])
+        );
 
         if ($updated) {
             return new ContactResource($contact);

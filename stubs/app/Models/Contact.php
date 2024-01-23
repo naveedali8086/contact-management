@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ContactBelongsTo;
 use App\Enums\ContactChannels;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,10 +20,12 @@ class Contact extends Model
         'channel',
         'channel_other',
         'channel_value',
+        'belongs_to'
     ];
 
     protected $casts = [
         'channel' => ContactChannels::class,
+        'belongs_to'=> ContactBelongsTo::class
     ];
 
     public function contactable(): MorphTo
@@ -30,23 +33,23 @@ class Contact extends Model
         return $this->morphTo();
     }
 
-    public static function addErrorIfContactExists(Validator $validator, $attribute, $id = null): void
+    public static function addErrorIfChannelValueExists(Validator $validator, $contactId = null): void
     {
-        $attrValue = $validator->getValue($attribute);
-        if ($attrValue) {
+        $channelValue = $validator->getValue('channel_value');
+        $belongsTo = $validator->getValue('belongs_to');
+        $belongsToId = $validator->getValue('belongs_to_id');
+        if ($channelValue && $belongsTo && $belongsToId) {
             $exists = self::query()
-                ->where('channel_value', $attrValue)
-                ->where('contactable_type', \App\Models\Customer::class)
-                ->when($id, function (Builder $query, $id) {
-                    $query->whereNot('id', $id);
+                ->where('channel_value', $channelValue)
+                ->where('belongs_to', $belongsTo)
+                ->where('contactable_id', $belongsToId)
+                ->when($contactId, function (Builder $query, $contactId) {
+                    $query->whereNot('id', $contactId);
                 })
                 ->exists();
 
             if ($exists) {
-                $validator->errors()->add(
-                    $attribute,
-                    "'$attrValue' has already been taken"
-                );
+                $validator->errors()->add('channel_value', "'$channelValue' has already been taken");
             }
         }
     }

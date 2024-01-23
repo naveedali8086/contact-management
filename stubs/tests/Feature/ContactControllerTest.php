@@ -29,8 +29,6 @@ class ContactControllerTest extends TestCase
     public function it_can_create_a_contact()
     {
         $contact = Contact::factory()->make()->toArray();
-        // following two attributes tell to whom this contact would belong to
-        $contact['belongs_to'] = fake()->randomElement(ContactBelongsTo::cases());
         $contact['belongs_to_id'] = Customer::factory()->create()->value('id');
 
         $response = $this->postJson('/api/contacts', $contact);
@@ -47,6 +45,7 @@ class ContactControllerTest extends TestCase
     public function it_cannot_create_a_contact_with_invalid_data()
     {
         $contact = Contact::factory()->make()->toArray();
+        $contact['belongs_to_id'] = Customer::factory()->create()->value('id');
         $contact['channel'] = ''; // emptying required field to create validation errors
 
         $response = $this->postJson('/api/contacts', $contact);
@@ -66,52 +65,38 @@ class ContactControllerTest extends TestCase
     /** @test */
     public function it_can_update_a_contact()
     {
-        $contactToBeUpdated = Contact::factory()
-            // As per Laravel Docs:
-            // Magic methods may not be used to create morphTo relationships.
-            // Instead, the for method must be used directly and the name of
-            // the relationship must be explicitly provided
-            ->for(Customer::factory(), 'contactable')
-            ->create()
-            ->toArray();
+        $contact = $this->createContactWithParent();
+        $contact->channel_value = Contact::factory()->getChannelValue($contact->channel);
 
-        $newContact = Contact::factory()->make()->toArray();
-
-        $response = $this->putJson("/api/contacts/{$contactToBeUpdated['id']}", $newContact);
+        $contact = $contact->toArray();
+        $response = $this->putJson("/api/contacts/{$contact['id']}", $contact);
 
         $response
             ->assertStatus(200)
             ->assertJsonStructure(['data' => $this->getContactAttributes()]);
 
-        $this->assertDatabaseHas('contacts', array_merge(['id' => $contactToBeUpdated['id']], $newContact));
+        // unset "belongs_to_id" as it does not exist in DB and was only required while sending a request
+        unset($contact['belongs_to_id']);
+        $this->assertDatabaseHas('contacts', $contact);
     }
 
     /** @test */
     public function it_cannot_update_a_contact_with_invalid_data()
     {
-        $contact = Contact::factory()
-            ->for(Customer::factory(), 'contactable')
-            ->create()
-            ->toArray();
+        $contact = $this->createContactWithParent()->toArray();
+        $contact['channel'] = ''; // emptying required field to create validation errors
 
-        $invalidData = [...$contact];
-        $invalidData['channel'] = ''; // emptying required field to create validation errors
-
-        $response = $this->putJson("/api/contacts/{$contact['id']}", $invalidData);
+        $response = $this->putJson("/api/contacts/{$contact['id']}", $contact);
 
         $response
             ->assertStatus(422) // Validation error
             ->assertJsonValidationErrors(['channel']);
-
-        $this->assertDatabaseMissing('contacts', $invalidData);
     }
 
     /** @test */
     public function it_can_soft_delete_a_contact()
     {
-        $contact = Contact::factory()
-            ->for(Customer::factory(), 'contactable')
-            ->create();
+        $contact = $this->createContactWithParent();
 
         $response = $this->deleteJson("/api/contacts/$contact->id");
 
@@ -123,10 +108,7 @@ class ContactControllerTest extends TestCase
     /** @test */
     public function it_can_get_a_single_contact()
     {
-        $contact = Contact::factory()
-            ->for(Customer::factory(), 'contactable')
-            ->create()
-            ->toArray();
+        $contact = $this->createContactWithParent()->toArray();
 
         $response = $this->getJson("/api/contacts/{$contact['id']}");
 
@@ -141,10 +123,7 @@ class ContactControllerTest extends TestCase
     /** @test */
     public function it_can_get_all_contacts()
     {
-        Contact::factory()
-            ->count(10)
-            ->for(Customer::factory(), 'contactable')
-            ->create();
+        $this->createContactWithParent(10);
 
         $response = $this->getJson('/api/contacts');
 
@@ -166,10 +145,41 @@ class ContactControllerTest extends TestCase
             'channel',
             'channel_other',
             'channel_value',
+            'belongs_to',
+            'belongs_to_id',
             'created_at',
             'updated_at'
         ];
 
         return array_diff($addCustomerAttrs, $except);
+    }
+
+    /**
+     * It creates contact's parent based on its "belongs_to" attribute's value
+     *
+     * @param $contactCount
+     * @return mixed
+     */
+    private function createContactWithParent($contactCount = 1)
+    {
+        $contacts = Contact::factory()->count($contactCount)->make();
+
+        $contacts->each(function (Contact $contact) {
+
+            // Getting contact's parent model fully qualified class name
+            $parentModelClass = ContactBelongsTo::getContactParentModelClass($contact->belongs_to);
+
+            // getting contact's parent model
+            $parentModel = $parentModelClass::factory()->create();
+
+            $parentModel->contacts()->save($contact);
+
+            $contact->makeHidden(['contactable_id', 'contactable_type']);
+
+            // a contact must send "belongs_to_id" when creating/updating a contact
+            $contact->belongs_to_id = $parentModel->id;
+
+        });
+        return $contactCount === 1 ? $contacts->first() : $contacts;
     }
 }

@@ -8,7 +8,17 @@ enum ContactBelongsTo: string
 {
 
     use CommonMethods;
-    case CUSTOMER = 'App\Models\Customer';
-    // case USER = 'App\Models\User';
+
+    case CUSTOMER = 'Customer';
+
+    // case USER = 'User';
+
+    public static function getContactParentModelClass(ContactBelongsTo $belongsTo): string
+    {
+        return match ($belongsTo) {
+            self::CUSTOMER => 'App\Models\Customer',
+            // self::USER => 'App\Models\User',
+        };
+    }
 
 }

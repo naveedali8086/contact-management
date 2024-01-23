@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ContactBelongsTo;
 use App\Enums\ContactChannels;
 use App\Models\Contact;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -28,31 +29,29 @@ class ContactFactory extends Factory
             // channel=Mobile, then channel_value should be a valid mobile number.
             'channel_other' => null,
             'channel_value' => null,
-
+            'belongs_to' => fake()->randomElement(ContactBelongsTo::cases())
         ];
     }
 
     public function configure()
     {
         return $this->afterMaking(function (Contact $contact) {
-            $contact->channel_other = $this->getChannelOtherValue($contact->channel);
+
             $contact->channel_value = $this->getChannelValue($contact->channel);
+
+            if ($contact->channel === ContactChannels::OTHER) {
+                $contact->channel_other = fake()->unique()->word();
+            }
+
         });
     }
 
-    private function getChannelValue(ContactChannels $channel): string
+    public function getChannelValue(ContactChannels $channel): string
     {
         return match ($channel) {
             ContactChannels::EMAIL => fake()->unique()->safeEmail(),
             ContactChannels::MOBILE => fake()->unique()->e164PhoneNumber(),
             ContactChannels::OTHER => fake()->unique()->word(),
         };
-    }
-
-    private function getChannelOtherValue(ContactChannels $channel): ?string
-    {
-        return $channel == ContactChannels::OTHER ?
-            fake()->unique()->word() :
-            null;
     }
 }

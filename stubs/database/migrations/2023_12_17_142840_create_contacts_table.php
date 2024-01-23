@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('channel_value')->unique();
             $table->unsignedBigInteger('contactable_id');
             $table->string('contactable_type');
+            $table->string('belongs_to');
             $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
         });

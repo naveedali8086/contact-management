@@ -16,22 +16,12 @@ class UpdateContactRequest extends ContactRequest
         return true;
     }
 
-    public function rules(): array
-    {
-        $rules = parent::rules();
-        // deleting following two attributes' rules as they are not needed while updating a contact
-        unset($rules['belongs_to']);
-        unset($rules['belongs_to_id']);
-        info(json_encode($rules));
-        return $rules;
-    }
-
     public function after()
     {
         $contactId = $this->route('contact')->id;
         return [
             function (Validator $validator) use ($contactId) {
-                Contact::addErrorIfContactExists($validator, 'channel_value', $contactId);
+                Contact::addErrorIfChannelValueExists($validator, $contactId);
             }
         ];
     }

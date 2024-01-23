@@ -54,7 +54,7 @@ class ContactRequest extends FormRequest
     {
         return [
             function (Validator $validator) {
-                Contact::addErrorIfContactExists($validator, 'channel_value');
+                Contact::addErrorIfChannelValueExists($validator);
             }
         ];
     }
