@@ -29,7 +29,12 @@ class ContactRequest extends FormRequest
         return [
             'channel' => ['required', 'max:255', Rule::enum(ContactChannels::class)],
 
-            'channel_other' => ['required_if:channel,' . ContactChannels::OTHER->value, 'max:255'],
+            'channel_other' => [
+                Rule::requiredIf(function () {
+                    return $this->enum('channel', ContactChannels::class) === ContactChannels::OTHER;
+                }),
+                'max:255'
+            ],
 
             'channel_value' => [
                 // Adding dynamic rules on "channel_value" attribute based on "channel's" attribute value
