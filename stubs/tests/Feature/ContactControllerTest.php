@@ -114,10 +114,7 @@ class ContactControllerTest extends TestCase
 
         $response->assertStatus(200);
 
-        $this->assertEquals(
-            Arr::except($contact, ['contactable_id', 'contactable_type']),
-            $response->json('data')
-        );
+        $this->assertEquals($contact, $response->json('data'));
     }
 
     /** @test */
@@ -153,7 +150,6 @@ class ContactControllerTest extends TestCase
 
         return array_diff($addCustomerAttrs, $except);
     }
-
     /**
      * It creates contact's parent based on its "belongs_to" attribute's value
      *
