@@ -137,7 +137,7 @@ class ContactControllerTest extends TestCase
 
     private function getContactAttributes(array $except = []): array
     {
-        $addCustomerAttrs = [
+        $attrs = [
             'id',
             'channel',
             'channel_other',
@@ -148,7 +148,7 @@ class ContactControllerTest extends TestCase
             'updated_at'
         ];
 
-        return array_diff($addCustomerAttrs, $except);
+        return array_diff($attrs, $except);
     }
     /**
      * It creates contact's parent based on its "belongs_to" attribute's value

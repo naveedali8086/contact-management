@@ -4,6 +4,7 @@ namespace Naveedali8086\ContactManagement\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\File;
 
 class InstallCommand extends Command
 {
@@ -40,7 +41,8 @@ class InstallCommand extends Command
         $fileSystem->copyDirectory(__DIR__ . '/../../stubs/database/seeders', base_path('database/seeders'));
 
         // copy migrations
-        $fileSystem->copyDirectory(__DIR__ . '/../../stubs/database/migrations', base_path('database/migrations'));
+        $files = File::glob(__DIR__ . '/../../stubs/database/migrations/*.php');
+        copy_migrations(database_path('migrations'), $files);
 
         // Copy policies
         $fileSystem->ensureDirectoryExists(app_path('Policies'));
@@ -55,4 +57,27 @@ class InstallCommand extends Command
 
         $this->info("contact-management scaffolding installed successfully");
     }
+
+    private function copyMigrations(): void
+    {
+        // Get the path where migrations should be published
+        $destinationPath = database_path('migrations');
+
+        // Get all migration files in the source directory
+        $files = File::glob(__DIR__ . '/../../stubs/database/migrations/*.php');
+
+        foreach ($files as $file) {
+            // Extract the filename without extension
+            $fileName = pathinfo($file, PATHINFO_FILENAME);
+
+            // Append current date and time to the filename
+            $timestamp = now()->format('Y_m_d_His');
+
+            $newFilename = preg_replace('/\d{4}_\d{2}_\d{2}_\d+/', $timestamp, $fileName);
+
+            // Publish the migration file with the new filename
+            File::copy($file, "$destinationPath/$newFilename.php");
+        }
+    }
+
 }
