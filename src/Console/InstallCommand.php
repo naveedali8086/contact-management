@@ -16,6 +16,14 @@ class InstallCommand extends Command
     {
         $fileSystem = new Filesystem();
 
+        // copy migrations
+        $filePathsTo = File::glob(__DIR__ . '/../../stubs/database/migrations/*.php');
+        if ($error = create_table_migration_exists(['contacts'])) {
+            $this->info($error);
+            return;
+        }
+        copy_migrations(database_path('migrations'), $filePathsTo);
+
         // Copy controllers
         $fileSystem->copyDirectory(__DIR__ . '/../../stubs/app/Http/Controllers', app_path('Http/Controllers'));
 
@@ -39,10 +47,6 @@ class InstallCommand extends Command
 
         // copy seeders
         $fileSystem->copyDirectory(__DIR__ . '/../../stubs/database/seeders', base_path('database/seeders'));
-
-        // copy migrations
-        $files = File::glob(__DIR__ . '/../../stubs/database/migrations/*.php');
-        copy_migrations(database_path('migrations'), $files);
 
         // Copy policies
         $fileSystem->ensureDirectoryExists(app_path('Policies'));
